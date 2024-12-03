@@ -19,11 +19,11 @@ books = [
 ]
 
 
-@app.get('/books')
+@app.get('/books',tags=['Книги1'],summary="Все книги")
 def read_books():
     return books
 
-@app.get('/books/{book_id}')
+@app.get('/books/{book_id}',tags=['Книги1'],summary="Получит одну книгу")
 def get_book(book_id:int):
     for book in books:
         if book['id'] == book_id:
