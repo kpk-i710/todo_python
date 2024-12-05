@@ -1,43 +1,22 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends, status
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 import uvicorn
 from pydantic import BaseModel
+from datetime import datetime, timedelta
+from jose import JWTError, jwt
+from passlib.context import CryptoContext
+
+from model import Data
+
+SECRET_KEY = ''
+ALGORITHM = 'HS256'
 
 app = FastAPI()
 
-books = [
-    {"id": 1,
-     "title": "Асинхронность в Python",
-     "author": "Маттью", },
-    {"id": 2,
-     "title": "Потом в Python",
-     "author": "Мак1",
-     },
-]
+@app.post("/create/")
+async def create(data: Data):
+    return data
 
-
-@app.get('/books', tags=['Книги1'], summary="Все книги")
-def read_books():
-    return books
-
-
-@app.get('/books/{book_id}', tags=['Книги1'], summary="Получит одну книгу")
-def get_book(book_id: int):
-    for book in books:
-        if book['id'] == book_id:
-            return book
-    raise HTTPException(status_code=404, detail="Книга не найдена")
-
-
-class NewBook(BaseModel):
-    title: str
-    author: str
-
-
-@app.post('/books',summary='Создать книгу')
-def create_book(new_book: NewBook):
-    books.append({
-        "id": len(books)+1,
-        "title": new_book.title,
-        "author": new_book.author,
-    })
-    return {"success":True,"message": "Книга успешно добавлена"}
+@app.get("/test/{item_id}/")
+async def test(item_id:int,query:int=1):
+    return {"hello": f"world {item_id}"}

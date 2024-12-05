@@ -1,4 +1,6 @@
 fastapi
-uvicorn
+uvicorn[standard]
 tortoise-orm
 python-multipart
+passlib[bcrypt]
+python-jose[cryptography]
