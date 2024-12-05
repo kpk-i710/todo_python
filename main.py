@@ -13,7 +13,7 @@ books = [
      "author": "Маттью", },
     {"id": 2,
      "title": "Потом в Python",
-     "author": "Мак",
+     "author": "Мак1",
      },
 ]
 
