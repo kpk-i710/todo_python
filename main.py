@@ -4,12 +4,13 @@ import uvicorn
 from pydantic import BaseModel
 from datetime import datetime, timedelta
 from jose import JWTError, jwt
-from passlib.context import CryptoContext
+from passlib.context import CryptContext
 
 from model import Data
 
 SECRET_KEY = ''
 ALGORITHM = 'HS256'
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 app = FastAPI()
 
