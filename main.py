@@ -4,9 +4,6 @@ from pydantic import BaseModel
 
 app = FastAPI()
 
-# if __name__ == "__main__":
-#     uvicorn.run("app.main:app", reload=True)
-
 books = [
     {"id": 1,
      "title": "Асинхронность в Python",
