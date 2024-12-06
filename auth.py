@@ -9,11 +9,32 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
-# Модели и хранилище
-users_db = {}  # Временное хранилище пользователей
+
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+users_db = {
+    "admin@example.com": {
+        "email": "admin@example.com",
+        "hashed_password": pwd_context.hash("adminpass"),
+        "role": "admin"
+    },
+    "brigadier@example.com": {
+        "email": "brigadier@example.com",
+        "hashed_password": pwd_context.hash("brigadierpass"),
+        "role": "brigadier"
+    },
+    "user@example.com": {
+        "email": "user@example.com",
+        "hashed_password": pwd_context.hash("userpass"),
+        "role": "user"
+    },
+}
 
 # Инициализация маршрутизатора
 router = APIRouter()
+
 
 
 # Эндпоинт регистрации
@@ -47,8 +68,6 @@ async def protected(token: str = Depends(oauth2_scheme)):
         raise HTTPException(status_code=401, detail="Invalid token")
 
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 # Утилиты
 def get_password_hash(password):
