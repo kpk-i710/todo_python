@@ -8,6 +8,7 @@ SECRET_KEY = "supersecretkey"  # Замените на свой секретны
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 # Модели и хранилище
 users_db = {}  # Временное хранилище пользователей
 
