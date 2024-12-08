@@ -34,8 +34,14 @@ products_db = [
     {"id": 1, "title": "Товар 1", "description": "Описание товара 1"},
     {"id": 2, "title": "Товар 2", "description": "Описание товара 2"},
 ]
-
-comments_db = []
+comments_db = [
+    {
+        "product_id": 1,
+        "user_email": "user@example.com",
+        "content": "Это отличный товар!",
+        "parent_id": None,  # Это корневой комментарий
+    }
+]
 
 users_db = {
     "admin@example.com": {
