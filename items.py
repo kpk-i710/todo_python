@@ -5,99 +5,94 @@ from pydantic import BaseModel
 from typing import List, Optional
 from auth import get_password_hash, verify_password, users_db, SECRET_KEY, ALGORITHM, oauth2_scheme, create_access_token
 import uuid
-
-# Структура данных товара
-class Item(BaseModel):
-    name: str
-    description: str
-    price: float
-
-# Структура данных комментария
-class Comment(BaseModel):
-    user_email: str
-    content: str
-    reply_to: Optional[str] = None  # Ответ на комментарий (если есть)
-
+from passlib.context import CryptContext
+ 
 # Инициализация маршрутизатора
 routerAuth = APIRouter()
 
-# Список товаров и комментариев (можно заменить на реальную БД)
-items_db = {}
-comments_db = {}
 
-# Эндпоинт для добавления товара
-@routerAuth.post("/items/")
-async def create_item(item: Item, token: str = Depends(oauth2_scheme)):
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        email = payload.get("sub")
-        if email is None or email not in users_db:
-            raise HTTPException(status_code=401, detail="Invalid token")
-        
-        item_id = str(uuid.uuid4())  # Генерируем уникальный ID для товара
-        items_db[item_id] = item
-        
-        return {"message": "Item created successfully", "item_id": item_id}
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Invalid token")
+# Модели данных
+class Product(BaseModel):
+    id: int
+    title: str
+    description: str
 
-# Эндпоинт для получения списка товаров
-@routerAuth.get("/items/", response_model=List[Item])
-async def get_items():
-    return list(items_db.values())
 
-# Эндпоинт для добавления комментария
-@routerAuth.post("/comments/{item_id}/")
-async def add_comment(item_id: str, comment: Comment, token: str = Depends(oauth2_scheme)):
-    if item_id not in items_db:
-        raise HTTPException(status_code=404, detail="Item not found")
-    
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        email = payload.get("sub")
-        if email is None or email not in users_db:
-            raise HTTPException(status_code=401, detail="Invalid token")
-        
-        comment_id = str(uuid.uuid4())  # Генерируем уникальный ID для комментария
-        comment_data = comment.dict()
-        comment_data["user_email"] = email
-        comments_db.setdefault(item_id, []).append(comment_data)
-        
-        return {"message": "Comment added successfully", "comment_id": comment_id}
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Invalid token")
+class Comment(BaseModel):
+    product_id: int
+    user_email: str
+    content: str
 
-# Эндпоинт для получения комментариев к товару
-@routerAuth.get("/comments/{item_id}/", response_model=List[Comment])
-async def get_comments(item_id: str):
-    if item_id not in comments_db:
-        raise HTTPException(status_code=404, detail="No comments found")
-    return comments_db[item_id]
 
-# Эндпоинт для ответа на комментарий
-@routerAuth.post("/comments/reply/{item_id}/{comment_id}/")
-async def reply_to_comment(item_id: str, comment_id: str, reply_content: str, token: str = Depends(oauth2_scheme)):
-    if item_id not in items_db:
-        raise HTTPException(status_code=404, detail="Item not found")
-    
-    if item_id not in comments_db or comment_id not in [comment["id"] for comment in comments_db[item_id]]:
-        raise HTTPException(status_code=404, detail="Comment not found")
-    
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        email = payload.get("sub")
-        user_role = users_db[email]["role"]
-        
-        # Проверка роли (только админ или бригадир могут отвечать)
-        if user_role not in ["admin", "brigadier"]:
-            raise HTTPException(status_code=403, detail="You do not have permission to reply")
-        
-        # Находим комментарий и добавляем ответ
-        for comment in comments_db[item_id]:
-            if comment["id"] == comment_id:
-                comment["reply"] = reply_content
-                break
-        
-        return {"message": "Reply added successfully"}
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Invalid token")
+class User(BaseModel):
+    email: str
+    role: str
+
+
+# База данных в памяти
+products_db = [
+    {"id": 1, "title": "Товар 1", "description": "Описание товара 1"},
+    {"id": 2, "title": "Товар 2", "description": "Описание товара 2"},
+]
+
+comments_db = []
+
+users_db = {
+    "admin@example.com": {
+        "email": "admin@example.com",
+        "hashed_password": CryptContext(schemes=["bcrypt"]).hash("adminpass"),
+        "role": "admin",
+    },
+    "brigadier@example.com": {
+        "email": "brigadier@example.com",
+        "hashed_password": CryptContext(schemes=["bcrypt"]).hash("brigadierpass"),
+        "role": "brigadier",
+    },
+    "user@example.com": {
+        "email": "user@example.com",
+        "hashed_password": CryptContext(schemes=["bcrypt"]).hash("userpass"),
+        "role": "user",
+    },
+}
+
+
+# Функции для работы с пользователями
+def get_user(email: str) -> Optional[dict]:
+    return users_db.get(email)
+
+
+# Эндпоинты для работы с товарами
+@routerAuth.get("/products", response_model=List[Product])
+def get_products():
+    return products_db
+
+
+@routerAuth.post("/products", response_model=Product)
+def create_product(product: Product):
+    if any(p["id"] == product.id for p in products_db):
+        raise HTTPException(status_code=400, detail="Товар с таким ID уже существует")
+    products_db.append(product.dict())
+    return product
+
+
+@routerAuth.get("/products/{product_id}", response_model=Product)
+def get_product(product_id: int):
+    for product in products_db:
+        if product["id"] == product_id:
+            return product
+    raise HTTPException(status_code=404, detail="Товар не найден")
+
+
+# Эндпоинты для работы с комментариями
+@routerAuth.get("/products/{product_id}/comments", response_model=List[Comment])
+def get_comments(product_id: int):
+    return [comment for comment in comments_db if comment["product_id"] == product_id]
+
+
+@routerAuth.post("/products/{product_id}/comments", response_model=Comment)
+def add_comment(product_id: int, comment: Comment):
+    if not any(p["id"] == product_id for p in products_db):
+        raise HTTPException(status_code=404, detail="Товар не найден")
+    comments_db.append(comment.dict())
+    return comment
+ 
