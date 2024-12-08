@@ -22,6 +22,7 @@ class Comment(BaseModel):
     product_id: int
     user_email: str
     content: str
+    parent_id: Optional[int] = None  # Добавляем поле parent_id, которое будет optional (необязательное)
 
 
 class User(BaseModel):
@@ -94,11 +95,24 @@ def get_product(product_id: int):
 def get_comments(product_id: int):
     return [comment for comment in comments_db if comment["product_id"] == product_id]
 
-
 @routerAuth.post("/products/{product_id}/comments", response_model=Comment)
 def add_comment(product_id: int, comment: Comment):
+    # Проверяем, существует ли указанный товар
     if not any(p["id"] == product_id for p in products_db):
         raise HTTPException(status_code=404, detail="Товар не найден")
-    comments_db.append(comment.dict())
-    return comment
- 
+    
+    # Если parent_id не равен 0, проверяем существование родительского комментария
+    if comment.parent_id != 0:
+        parent_comment = next((c for c in comments_db if c["id"] == comment.parent_id), None)
+        if not parent_comment:
+            raise HTTPException(status_code=404, detail="Родительский комментарий не найден")
+        if parent_comment["product_id"] != product_id:
+            raise HTTPException(status_code=400, detail="Родительский комментарий относится к другому товару")
+
+    # Генерация уникального id для нового комментария
+    new_comment = comment.dict()
+    new_comment["id"] = len(comments_db) + 1  # Генерация ID для нового комментария
+    new_comment["product_id"] = product_id  # Устанавливаем соответствующий product_id
+    comments_db.append(new_comment)
+    
+    return new_comment
