@@ -3,6 +3,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
+from pydantic import BaseModel
 # Настройки безопасности
 SECRET_KEY = "supersecretkey"  # Замените на свой секретный ключ
 ALGORITHM = "HS256"
@@ -36,6 +37,9 @@ users_db = {
 router = APIRouter()
 
 
+class LoginForm(BaseModel):
+    username: str
+    password: str
 
 # Эндпоинт регистрации
 @router.post("/register")
@@ -48,7 +52,7 @@ async def register(email: str, password: str):
 
 # Эндпоинт авторизации
 @router.post("/token")
-async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+async def login(form_data: LoginForm):
     user = users_db.get(form_data.username)
     if not user or not verify_password(form_data.password, user["hashed_password"]):
         raise HTTPException(status_code=401, detail="Invalid credentials")
