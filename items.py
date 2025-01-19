@@ -1,4 +1,5 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, File, UploadFile, HTTPException
+from fastapi.responses import JSONResponse
 from jose import JWTError
 import jwt
 from pydantic import BaseModel
@@ -61,6 +62,18 @@ users_db = {
         "role": "user",
     },
 }
+
+@routerAuth.post("/uploadfile/")
+async def upload_file(file: UploadFile = File(...)):
+    try:
+        contents = await file.read()
+        # Здесь вы можете сохранить файл на диск или обработать его содержимое
+        with open(f"uploads/{file.filename}", "wb") as f:
+            f.write(contents)
+        return JSONResponse(content={"message": "File uploaded successfully", "filename": file.filename})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 
 # Функции для работы с пользователями
