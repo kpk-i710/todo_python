@@ -1,11 +1,1 @@
-selenium==4.15.2  # Укажите версию selenium, совместимую с вашим проектом
-chromedriver-binary==114.0.5735.90
-
-fastapi
-uvicorn
-selenium==4.15.2
-chromedriver-binary==114.0.5735.90
-
-sqlalchemy
-pydantic
-python-dotenv
+selenium==4.1.0
