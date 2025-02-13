@@ -1,0 +1,8 @@
+fastapi
+uvicorn[standard]
+tortoise-orm
+python-multipart
+passlib[bcrypt]
+python-jose[cryptography]
+pyjwt
+pydantic[email]

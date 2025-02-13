@@ -1,8 +1,2 @@
-fastapi
-uvicorn[standard]
-tortoise-orm
-python-multipart
-passlib[bcrypt]
-python-jose[cryptography]
-pyjwt
-pydantic[email]
+selenium==4.15.2  # Укажите версию selenium, совместимую с вашим проектом
+chromedriver-binary==114.0.5735.90  # Укажите версию chromedriver, совместимую с вашей версией Chrome
