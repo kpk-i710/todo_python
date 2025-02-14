@@ -19,7 +19,7 @@ os_name = platform.system().lower()
 if os_name == "darwin":  # macOS
     CHROME_PATH = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 elif os_name == "linux":  # Linux (Render)
-    CHROME_PATH = "/opt/render/project/src/opt/google/chrome/google-chrome"
+    CHROME_PATH = "/home/render/opt/google/chrome/google-chrome"
 else:
     raise RuntimeError(f"ОС {os_name} не поддерживается!")
 
