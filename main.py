@@ -12,39 +12,43 @@ import threading
 
 app = FastAPI()
 
-# Определяем путь к текущей директории (где находится main.py)
-current_dir = os.path.dirname(os.path.abspath(__file__))
-
 # Определяем операционную систему
 os_name = platform.system().lower()
 
-# Формируем путь к chromedriver внутри папки "drivers" вашего проекта
-if os_name == "linux":
-    driver_path = os.path.join(current_dir, "drivers", "chromedriver_linux")
-elif os_name == "darwin":  # macOS
-    driver_path = os.path.join(current_dir, "drivers", "chromedriver")
+# Пути к Chrome и ChromeDriver
+if os_name == "darwin":  # macOS
+    CHROME_PATH = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+elif os_name == "linux":  # Linux (Render)
+    CHROME_PATH = "/opt/render/project/src/opt/google/chrome/google-chrome"
 else:
-    raise Exception("Unsupported operating system")
+    raise RuntimeError(f"ОС {os_name} не поддерживается!")
 
-# Проверяем, что файл существует
-if not os.path.exists(driver_path):
-    raise FileNotFoundError(f"ChromeDriver не найден по пути: {driver_path}")
+# Путь к chromedriver (один и тот же для всех систем)
+CHROMEDRIVER_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "drivers", "chromedriver_linux")
 
-# На macOS и Linux делаем драйвер исполняемым (если ещё не установлен этот флаг)
-if os.name != "nt":
-    os.chmod(driver_path, 0o755)
+# Проверяем, что файлы существуют
+if not os.path.exists(CHROME_PATH):
+    raise FileNotFoundError(f"Google Chrome не найден по пути: {CHROME_PATH}")
+if not os.path.exists(CHROMEDRIVER_PATH):
+    raise FileNotFoundError(f"ChromeDriver не найден по пути: {CHROMEDRIVER_PATH}")
 
-# Настройка опций для Chrome
+# Делаем ChromeDriver исполняемым (если требуется)
+os.chmod(CHROMEDRIVER_PATH, 0o755)
+
+# Настройка Chrome
 chrome_options = webdriver.ChromeOptions()
-chrome_options.add_argument("--headless")  # Включаем headless режим
-chrome_options.add_argument("--disable-gpu")  # Отключаем GPU
-chrome_options.add_argument("--window-size=1920,1080")  # Устанавливаем размер окна
+chrome_options.binary_location = CHROME_PATH  # Указываем путь к Chrome
+chrome_options.add_argument("--headless")  # Без GUI
+chrome_options.add_argument("--disable-gpu")  # Отключить GPU
+chrome_options.add_argument("--no-sandbox")  # Для контейнеров (на Linux)
+chrome_options.add_argument("--disable-dev-shm-usage")  # Для работы в ограниченной памяти
+chrome_options.add_argument("--window-size=1920,1080")  # Размер окна
+chrome_options.add_argument("--remote-debugging-port=9222")  # Отладка
 
 # Создаем экземпляр службы с указанным chromedriver
-service = Service(driver_path)
+service = Service(CHROMEDRIVER_PATH)
 
 def run_selenium():
-    # Повторяем запрос 10 раз (или нужное количество итераций)
     for i in range(100000):
         start_time = time.time()
         print(f"Итерация {i + 1} начата в: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
