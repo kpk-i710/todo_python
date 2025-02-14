@@ -10,7 +10,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from fastapi import FastAPI
 import threading
 
-# app = FastAPI()
+app = FastAPI()
 #
 # # Определяем путь к текущей директории (где находится main.py)
 # current_dir = os.path.dirname(os.path.abspath(__file__))
