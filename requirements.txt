@@ -1,2 +1,8 @@
 selenium==4.1.0
+fastapi
 uvicorn
+selenium
+webdriver-manager
+requests
+pydantic
+typing-extensions
